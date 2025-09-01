@@ -7,11 +7,11 @@ replicaCount: 1
 
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
-  repository: nginx
+  repository: kmsaksacr.azurecr.io/fastapi-demo
   # This sets the pull policy for images.
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  tag: "v1"
 
 # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
@@ -52,10 +52,13 @@ securityContext: {}
 # This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
 service:
   # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
-  type: ClusterIP
+  type: LoadBalancer
   # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
   port: 80
-
+  annotations:
+    # 만약 Public IP를 노드 RG가 아닌 다른 RG에 만들었다면 아래 줄 활성화하고 <NODE_RG> 대입
+    # service.beta.kubernetes.io/azure-load-balancer-resource-group: "<NODE_RG>"
+cat /home/mskim/deploy-repo/envs/dev/values.yaml | grep -A3 service:
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ingress:
   enabled: false
@@ -83,6 +86,8 @@ resources: {}
   #   memory: 128Mi
   # requests:
   #   cpu: 100m
+  #   memory: 128Mi
+
   #   memory: 128Mi
 
 # This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
@@ -121,3 +126,54 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+extraEnv:
+  # already existing...
+  - name: APP_NAMESPACE
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.namespace
+  - name: APP_POD
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.name
+  - name: APP_NODE
+    valueFrom:
+      fieldRef:
+        fieldPath: spec.nodeName
+  - name: APP_CONTAINER_TAG
+    value: "v1"
+  - name: APP_GIT_SHA
+    value: "unset"
+
+  # add these for the app:
+  - name: POD
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.name
+  - name: NODE
+    valueFrom:
+      fieldRef:
+        fieldPath: spec.nodeName
+  - name: IMAGE_TAG
+    value: "v1"        # CI에서 이미지 태그로 덮어쓸 예정이면 여기 값을 바꿔주면 됨
+  - name: GIT_SHA
+    value: "unset"     # CI에서 SHA 주입 시 override
+  - name: POD_NAME
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.name
+  - name: NODE_NAME
+    valueFrom:
+      fieldRef:
+        fieldPath: spec.nodeName
+  - name: K8S_NAMESPACE
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.namespace
+  - name: POD_NAMESPACE
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.namespace
+  - name: K8S_NAMESPACE_LOWER
+    valueFrom:

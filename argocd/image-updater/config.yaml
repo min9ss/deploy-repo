@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-image-updater-config
+  namespace: argocd
+data:
+  registries.conf: |
+    registries:
+    - name: kmsaksacr
+      api_url: https://kmsaksacr.azurecr.io
+      prefix: kmsaksacr.azurecr.io
+      default: true
+      credentials: pullsecret:acr-creds
+      credsexpire: 10h
+

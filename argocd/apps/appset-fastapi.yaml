@@ -9,11 +9,18 @@ spec:
         elements:
           - env: dev
             ns: fastapi-dev
+            allowTags: 'regexp:^v[0-9]+$'   # dev는 v숫자 태그 자동추적
           - env: prod
             ns: fastapi-prod
+            allowTags: 'regexp:^$'          # prod는 빈 정규식 → 사실상 비활성
   template:
     metadata:
       name: '{{ns}}'
+      annotations:
+        argocd-image-updater.argoproj.io/image-list: fastapi=kmsaksacr.azurecr.io/fastapi-demo
+        argocd-image-updater.argoproj.io/write-back-method: argocd
+        # dev/prod별로 다르게 치환됨
+        argocd-image-updater.argoproj.io/fastapi.allow-tags: '{{allowTags}}'
     spec:
       project: default
       source:
@@ -23,6 +30,9 @@ spec:
         helm:
           valueFiles:
             - ../../envs/{{env}}/values.yaml
+          parameters:
+            - name: image.tag
+              value: v2    # 초기 기준값(현재 prod/dev 둘 다 v2라서 v2로 지정함)
       destination:
         server: https://kubernetes.default.svc
         namespace: '{{ns}}'

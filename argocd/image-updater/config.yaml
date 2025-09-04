@@ -10,6 +10,6 @@ data:
       api_url: https://kmsaksacr.azurecr.io
       prefix: kmsaksacr.azurecr.io
       default: true
-      credentials: pullsecret:acr-creds
+      credentials: pullsecret:argocd/acr-creds
       credsexpire: 10h
 

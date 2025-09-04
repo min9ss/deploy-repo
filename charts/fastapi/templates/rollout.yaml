@@ -1,6 +1,6 @@
-{{- if not (.Values.rollouts.enabled | default false) }}
-apiVersion: apps/v1
-kind: Deployment
+{{- if (.Values.rollouts.enabled | default false) }}
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
 metadata:
   name: {{ include "fastapi.fullname" . }}
   labels:
@@ -9,6 +9,7 @@ spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
+  revisionHistoryLimit: 3
   selector:
     matchLabels:
       {{- include "fastapi.selectorLabels" . | nindent 6 }}
@@ -45,15 +46,6 @@ spec:
             - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
-          env:
-            - name: NAMESPACE
-              value: {{ .Release.Namespace | quote }}
-            - name: K8S_NAMESPACE_LOWER
-              value: {{ .Release.Namespace | lower | quote }}
-            {{- with .Values.extraEnv }}
-            {{- toYaml . | nindent 12 }}
-            {{- end }}
-
           {{- with .Values.livenessProbe }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}
@@ -66,24 +58,12 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.volumeMounts }}
-          volumeMounts:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-      {{- with .Values.volumes }}
-      volumes:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+  strategy:
+    canary:
+      steps:
+        - setWeight: {{ .Values.rollouts.canary.weights.first | default 20 }}
+        - pause: { duration: {{ .Values.rollouts.canary.pauses.first | default 60 }} }
+        - setWeight: {{ .Values.rollouts.canary.weights.second | default 50 }}
+        - pause: { duration: {{ .Values.rollouts.canary.pauses.second | default 120 }} }
 {{- end }}
+

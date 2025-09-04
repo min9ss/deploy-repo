@@ -3,7 +3,7 @@
 # Declare variables to be passed into your templates.
 
 # This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
-replicaCount: 3
+replicaCount: 4
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
   repository: kmsaksacr.azurecr.io/fastapi-demo
@@ -166,7 +166,7 @@ extraEnv:
   - name: K8S_NAMESPACE_LOWER
     valueFrom:
 rollouts:
-  enabled: true
+  enabled: false
   canary:
     weights:
       first: 20

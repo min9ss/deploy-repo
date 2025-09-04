@@ -1,0 +1,34 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: fastapi-envs
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - env: dev
+            ns: fastapi-dev
+          - env: prod
+            ns: fastapi-prod
+  template:
+    metadata:
+      name: '{{ns}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/min9ss/deploy-repo.git
+        targetRevision: main
+        path: charts/fastapi
+        helm:
+          valueFiles:
+            - ../../envs/{{env}}/values.yaml
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{ns}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

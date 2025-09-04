@@ -30,9 +30,6 @@ spec:
         helm:
           valueFiles:
             - ../../envs/{{env}}/values.yaml
-          parameters:
-            - name: image.tag
-              value: v2    # 초기 기준값(현재 prod/dev 둘 다 v2라서 v2로 지정함)
       destination:
         server: https://kubernetes.default.svc
         namespace: '{{ns}}'

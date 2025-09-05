@@ -17,9 +17,11 @@ spec:
     metadata:
       name: '{{ns}}'
       annotations:
+        # Image Updater 설정 (Git write-back + values.yaml 직접 수정)
         argocd-image-updater.argoproj.io/image-list: fastapi=kmsaksacr.azurecr.io/fastapi-demo
-        argocd-image-updater.argoproj.io/write-back-method: argocd
-        # dev/prod별로 다르게 치환됨
+        argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd/git-creds
+        argocd-image-updater.argoproj.io/write-back-target: 'helmvalues:envs/{{env}}/values.yaml'
+        argocd-image-updater.argoproj.io/git-branch: main   
         argocd-image-updater.argoproj.io/fastapi.allow-tags: '{{allowTags}}'
     spec:
       project: default
